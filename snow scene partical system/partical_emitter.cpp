@@ -32,6 +32,15 @@ Particle::Particle(vec _size, vec _speed, vec _acc, vec _angle,
 //有纹理绘制单个粒子
 void Particle::draw(GLuint texture)
 {
+	//没有mtl文件使用的材质
+	GLfloat ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	GLfloat shininess = 10.0f;
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
 	const GLfloat x1 = -0.5, x2 = 0.5;
@@ -50,6 +59,15 @@ void Particle::draw(GLuint texture)
 //无纹理绘制单个粒子
 void Particle::draw()
 {
+	//没有mtl文件使用的材质
+	GLfloat ambient[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 0.7f };
+	GLfloat specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	GLfloat shininess = 10.0f;
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 	const GLfloat x1 = -0.5, x2 = 0.5;
 	const GLfloat y1 = -0.5, y2 = 0.5;
 	const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };

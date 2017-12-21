@@ -14,12 +14,23 @@ GLint windowHandler;
 const int skySizeX = 200;
 const int skySizeY = 30;
 const int skySizeZ = 200;
-GLfloat lpos[4] = { 17.0f, 10.0f, -23.5f, 1.0f };
-GLfloat lAmb[4] = { 0.1f, 0.1f, 0.1f, 1.0f };
-GLfloat lDif[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
-GLfloat white_light[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-GLfloat lSpe[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
-
+//光源
+GLfloat light_constant = 0.01f;
+GLfloat light_linear = 0.001f;
+GLfloat light_quadratic = 0.0001f;
+GLfloat ldirect[3] = { 0.0f,-0.2f,-1.0f };
+GLfloat lcutoff =22.5f;
+GLfloat lexponent = 5.0f;
+GLfloat lpos[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+GLfloat lAmb[4] = { 0.05f, 0.05f, 0.05f, 1.0f };
+GLfloat lDif[4] = { 0.55f, 0.55f, 0.0f, 1.0f };
+GLfloat lSpe[4] = { 0.55f, 0.55f, 0.0f, 1.0f };
+GLfloat emission[] = { 0.55f, 0.55f, 0.0f, 1.0f };
+//没有mtl文件使用的材质
+GLfloat ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+GLfloat specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+GLfloat shininess = 10.0f;
 
 
 GLuint texture[10];
@@ -42,11 +53,16 @@ GLint mx = 0, my = 0;
 GLint MouseDown = 0;
 float ratio = 180;
 
+int col = 4, num = 12;
+
+
 Emitter *snowflower_emitter;
+Emitter *smoke_emitter;
+
 
 //加载obj
 std::map<std::string, Object> housemap;
-std:: set<std::string> housename;
+std::set<std::string> housename;
 std::string house;
 std::map<std::string, Material> house_matname;
 
@@ -60,10 +76,20 @@ Particle* init_snowflower_partical()
 	float size = rand() % 20 * 0.03f;
 	unsigned char color[] = { 1.0f,0.0f,0.0f };
 	float speed[] = { float(rand() % 10 - 4) / 800, float(rand() % 10 - 4) / 400, float(rand() % 10 - 4) / 800 };
-	float acc[] = { 1.0f*(rand() % 3 - 1) / 2000,-4.9 / 4000 ,1.0f*(rand() % 3 - 1) / 90000 };
+	float acc[] = { 1.0f*(rand() % 3 - 1) / 2000,-4.9 / 4000 ,1.0f*(rand() % 3 - 1) / 2000 };
 	float angle[] = { rand() % 360, rand() % 360 ,rand() % 360 };
 	Particle* p = new Particle(vec(size, size, size), vec(speed), vec(acc),
 		vec(angle), rand() % 100, texture[2]);
+	return p;
+}
+Particle* init_smoke_partical()
+{
+	float size = rand() % 90 * 0.02f;
+	float speed[] = { float(rand() % 10 - 4) / 1600, float(rand() % 10 - 4) / 800, float(rand() % 10 - 4) / 1600 };
+	float acc[] = { 1.0f*(rand() % 3 - 1) / 5000,4.9 / 2000 ,1.0f*(rand() % 3 - 1) / 5000 };
+	float angle[] = { rand() % 360, rand() % 360 ,rand() % 360 };
+	Particle* p = new Particle(vec(size, size, size), vec(speed), vec(acc),
+		vec(angle), rand() % 50 + 10, texture[3]);
 	return p;
 }
 
@@ -77,8 +103,76 @@ bool snowflower_dead(Particle* p)
 	return false;
 }
 
+bool smoke_dead(Particle* p)
+{
+	const vec& place = p->getPlace();
+	if (place.y > 1.0f*skySizeY) {
+		//s->add(place.x, place.z, p->getSize(), p->getAngle());
+		return true;
+	}
+	return false;
+}
+
+void drawBottom(GLuint texture)
+{
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
+	int i = 0, j = 0;
+
+	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+	const GLfloat x0[] = { 0,x,2 * x,3 * x,4 * x };
+	const GLfloat x1 = -0.5f, x2 = 0.5f;
+	const GLfloat y1 = -0.5f, y2 = 0.5f;
+	const GLfloat point[12][2] = {
+		{ x2,y1 },{ 0,0 },{ x1,y1 },
+		{ x1,y1 },{ 0,0 },{ x1,y2 },
+		{ x1,y2 },{ 0,0 },{ x2,y2 },
+		{ x2,y2 },{ 0,0 },{ x2,y1 },
+	};
+	const GLfloat dir[12][2] = { { x0[0],y },{ x0[2],0 },{ x0[1],y },
+	{ x0[1],y },{ x0[2],0 },{ x0[2],y },
+	{ x0[2],y },{ x0[2],0 },{ x0[3],y },
+	{ x0[3],y },{ x0[2],0 },{ x0[4],y } };
+
+	glBegin(GL_TRIANGLES);
+
+	for (int k = 0; k < 12; k++) {
+		glTexCoord2fv(dir[k]);
+		glVertex2fv(point[k]);
+	}
+	glEnd();
+
+
+	glDisable(GL_TEXTURE_2D);
+}
+
+void drawLine() {
+	glPushMatrix();
+	glBegin(GL_LINES);
+	glVertex3f(0.0f, -15.0f, 0.0f);
+	glVertex3f(0.0f, 15.0f, 0.0f);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(-100.0f, 0.0f, 0.0f);
+	glVertex3f(100.0f, 0.0f, 0.0f);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(0.0f, 0.0f, -100.0f);
+	glVertex3f(0.0f, 0.0f, 100.0f);
+	glEnd();
+	glBegin(GL_LINES);
+	glVertex3f(lpos[0], lpos[1], lpos[2]);
+	glVertex3f(ldirect[0] * 10.0f, ldirect[1] * 10.0f, ldirect[2] * 10.0f);
+	glEnd();
+	glPopMatrix();
+}
+
 void drawRect(GLuint texture)
 {
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
 	const GLfloat x1 = -0.5, x2 = 0.5;
@@ -95,6 +189,33 @@ void drawRect(GLuint texture)
 	glDisable(GL_TEXTURE_2D);
 }
 
+
+
+void drawRect(GLuint texture, int i, int j)
+{
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+	glEnable(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
+
+	const GLfloat x1 = -0.5, x2 = 0.5;
+	const GLfloat y1 = -0.5, y2 = 0.5;
+	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+	const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };
+	const GLfloat dir[4][2] = { { j*x,1 - (i + 1)*y },{ (j + 1)*x,1 - (i + 1)*y },{ (j + 1)*x ,1 - i*y },{ j*x,1 - i*y } };
+	glBegin(GL_QUADS);
+
+	for (int k = 0; k < 4; k++) {
+		glTexCoord2fv(dir[k]);
+		glVertex2fv(point[k]);
+	}
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
+}
+
 int a = 0;
 
 void renderScene() {
@@ -103,31 +224,54 @@ void renderScene() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();   //初始化矩阵为单位矩阵          
 	gluLookAt(eye[0], eye[1], eye[2], center[0], center[1], center[2], 0, 1, 0);
+	glEnable(GL_LIGHTING);
+	//Set up light
+	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lAmb);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDif);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, lSpe);
+	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, ldirect);
+	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, lcutoff);
+	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, lexponent);
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, light_constant);
+	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, light_linear);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, light_quadratic);
+	glEnable(GL_LIGHT0);
+
 	glPushMatrix();
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD);
+
 
 	glTranslatef(dx, dy, dz);
 	glRotatef(ax, 1.0f, 0.0f, 0.0f);
 	glRotatef(ay, 0.0f, 1.0f, 0.0f);
-	//glRotatef(90, 0.0f, 0.0f, 1.0f);
-	//glRotatef(30, 0.0f, 1.0f, 0.0f);
-	//glRotatef(90, 0.0f, 0.0f, 1.0f);
 	glInitNames();//初始化名字  
 	glPushName(0);//初始化名字栈  
+
+	drawLine();
+
+	//画一个光源
 	glPushMatrix();
-	glTranslatef(17.0f, 10.0f, -23.5f);
-	glRotatef(a, 1.0f, 1.0f, 0.0f);
-	//glColor3f(0.5f, 0.0f, 0.0f);//Red
-	glutSolidSphere(1,20,20);
+	glTranslatef(lpos[0], lpos[1], lpos[2]);
+	glMaterialfv(GL_FRONT, GL_EMISSION, emission);
+	glutSolidSphere(1, 20, 20);
+	glMaterialf(GL_FRONT, GL_EMISSION, 0);
 
 	glPopMatrix();
 
-	
+	//画房子
 	glCallList(houseList);
-
+	//画烟囱
 	glCallList(baseList);
-				  
+
 	//门
+	/*
+	glEnable(GL_BLEND);
+	glDepthMask(GL_FALSE);
+	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
+	
+	*/
+	
+
 	glLoadName(1);//加载名字  
 	glPushMatrix();
 	glTranslatef(-17.0f, -9.0f, -23.5f);
@@ -138,6 +282,12 @@ void renderScene() {
 	glScalef(10, 11, 1);
 	drawRect(texture[0]);
 	glPopMatrix();
+	/*
+	glDepthMask(GL_TRUE);
+
+	glDisable(GL_BLEND);
+	*/
+	
 	//窗
 	glLoadName(2);//加载名字  
 	glPushMatrix();
@@ -149,20 +299,20 @@ void renderScene() {
 	glScalef(7, 7, 1);
 	drawRect(texture[1]);
 	glPopMatrix();
-	
+
 
 	glPopName();
 
 	//地板
-	/*
+
 	glPushMatrix();
 	glTranslatef(0.0f, -1.0f*skySizeY / 2.0f, 0.0f);
 	glRotatef(270, 1, 0, 0);
 	glScalef(skySizeX, skySizeZ, 1);
-	drawBottom(texture[1]);
+	drawBottom(texture[4]);
 	glPopMatrix();
-	*/
-	
+
+
 
 	//天花板
 	/*
@@ -173,7 +323,7 @@ void renderScene() {
 	drawTop(texture[1]);
 	glPopMatrix();
 	*/
-	
+
 	/*
 	//墙壁（前）
 	glPushMatrix();
@@ -182,9 +332,9 @@ void renderScene() {
 	glRotatef(180, 0, 0, 1);
 	glRotatef(180, 0, 1, 0);
 	glScalef(skySizeX, skySizeY, 1);
-	drawRect(texture[1], 1, 2);
+	drawRect(texture[0], 1, 2);
 	glPopMatrix();
-
+	/*
 	//墙壁（后）
 	glPushMatrix();
 	glTranslatef(0.0f, 0.0f, 1.0f*skySizeZ / 2.0f);
@@ -209,55 +359,27 @@ void renderScene() {
 	drawRect(texture[1], 1, 3);
 	glPopMatrix();
 	*/
-	
-	//	int t = timer->GetTime();
+
 	glEnable(GL_BLEND);
-	//开始绘制粒子
-	/*
-	if (isSnow) {
-		snowflag = true;
-		t++;
-		if (t % 10 == 0 && t != last_t) {
-			e1->update();
-			last_t = t;
-			if (t == 100) {
-				t = 0;
-				last_t = 0;
-			}
-		}
-		else {
-			e1->show();
-		}
-	}
-	else if (snowflag) {
-		if (t >= 10) {
-			e1->fade();
-			s->remove();
-			t = 0;
-		}
-		e1->show();
-		t++;
-	}
-	s->show();
-	*/
 	glPushMatrix();
-	//glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, lAmb);
-	glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 	snowflower_emitter->show();
+	smoke_emitter->show();
+
 	glPopMatrix();
-	
-	glDisable(GL_BLEND);	
+
+	glDisable(GL_BLEND);
 	glPopMatrix();
 	glutSwapBuffers();//交换缓冲区      
 
 }
 
 void timeFunc(int value) {
-		a += 10;
-		snowflower_emitter->infinite_update();
-		//printf("frame time\n" );
-		glutPostRedisplay();
-		glutTimerFunc(FRAMETIME * 1000, timeFunc, 1);
+	a += 10;
+	snowflower_emitter->infinite_update();
+	smoke_emitter->infinite_update();
+	//printf("frame time\n" );
+	glutPostRedisplay();
+	glutTimerFunc(FRAMETIME * 1000, timeFunc, 1);
 
 }
 
@@ -272,7 +394,7 @@ void updateView(int height, int width)
 }
 
 
-void reshape(int width,int height) {
+void reshape(int width, int height) {
 	if (height == 0) { //如果高度为0     
 		height = 1;   //让高度为1（避免出现分母为0的现象）          
 	}
@@ -344,9 +466,9 @@ GLint GenTableList()
 	glNewList(lid, GL_COMPILE);
 	glPushMatrix();
 	//glTranslatef(-5.0f, -1.0f*skySizeY / 2.0f, -23.0f);
-	glTranslatef(-25.0f, -1.0f*skySizeY / 2.0f+28.0f, -1.0f*skySizeZ / 2.0f + 58.0f);
+	glTranslatef(-25.0f, -1.0f*skySizeY / 2.0f + 24.0f, -1.0f*skySizeZ / 2.0f + 64.0f);
 
-	glScalef(1.2f, 0.5f, 0.5f);
+	glScalef(1.2f, 0.5f, 1.2f);
 	loadObj(basename, basemap, base_matname);
 	glPopMatrix();
 
@@ -360,22 +482,13 @@ void setupRC() {
 	//平滑过渡效果
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
-	glColor4f(1.0, 1.0, 1.0, 1.0f);
+	//glColor4f(1.0, 1.0, 1.0, 1.0f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-	glEnable(GL_LIGHTING);
-	//Set up light
-	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lAmb);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDif);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, lSpe);
-	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.1);
-	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, 0.08);
-	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.003);
-	glEnable(GL_LIGHT0);
+
 	glEnable(GL_COLOR_MATERIAL);
-	glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
+	
 	glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, GL_TRUE);
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD);
+	
 	readObj(house, "obj\\house.obj", housemap, housename, house_matname);
 	readObj(house, "obj\\base.obj", basemap, basename, base_matname);
 	houseList = GenTableList();
@@ -383,6 +496,8 @@ void setupRC() {
 	buildTexture("door.jpg", texture[0]);
 	buildTexture("window.jpg", texture[1]);
 	buildTexture("snowflower.jpg", texture[2]);
+	buildTexture("flame.bmp", texture[3]);
+	buildTexture("roof.bmp", texture[4]);
 	//BuildTexture("background.jpg", texture[1]);
 	//BuildTexture("spark.bmp", texture[2]);
 	//BuildTexture("packet.jpg", texture[3]);
@@ -393,9 +508,10 @@ void setupRC() {
 
 	//s = new snow(texture[0]);
 
-	snowflower_emitter = new Emitter(7000, -1.0f*skySizeX/2.0f, 1.0f*skySizeX / 2.0f, 15, 15, -1.0f*skySizeZ / 2.0f, 1.0f*skySizeZ / 2.0f);
+	snowflower_emitter = new Emitter(7000, -1.0f*skySizeX / 2.0f, 1.0f*skySizeX / 2.0f, 1.0f*skySizeY / 2.0f, 1.0f*skySizeY / 2.0f, -1.0f*skySizeZ / 2.0f, 1.0f*skySizeZ / 2.0f);
 	snowflower_emitter->emit(init_snowflower_partical, snowflower_dead);
-
+	smoke_emitter = new Emitter(2000, -31.0f, -28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeZ / 2.0f + 67.5f, -1.0f*skySizeZ / 2.0f + 69.5f);
+	smoke_emitter->emit(init_smoke_partical, smoke_dead);
 	//e2 = new emitter(400, 1.5f, 2.5f, -8.0f, -7.5f, -19.5f, -20.5f);
 	//e2->emit(init_flame);
 

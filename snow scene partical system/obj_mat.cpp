@@ -22,7 +22,7 @@ void setMaterial(Material &mat)
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat.diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat.specular);
 	glMaterialfv(GL_FRONT, GL_EMISSION, mat.emission);
-	glMaterialf(GL_FRONT, GL_SHININESS, 100);
+	glMaterialf(GL_FRONT, GL_SHININESS, 10);
 }
 
 static GLuint load_texture(const char *file_name);
@@ -102,7 +102,6 @@ static GLuint load_texture(const char *file_name)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, pixels);
 	glBindTexture(GL_TEXTURE_2D, last_texture_ID);
 
