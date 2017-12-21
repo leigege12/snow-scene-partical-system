@@ -12,7 +12,7 @@
 
 GLint windowHandler;
 const int skySizeX = 200;
-const int skySizeY = 30;
+const int skySizeY = 60;
 const int skySizeZ = 200;
 //光源
 GLfloat light_constant = 0.01f;
@@ -21,11 +21,11 @@ GLfloat light_quadratic = 0.0001f;
 GLfloat ldirect[3] = { 0.0f,-0.2f,-1.0f };
 GLfloat lcutoff =22.5f;
 GLfloat lexponent = 5.0f;
-GLfloat lpos[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+GLfloat lpos[4] = { 0.0f, -15.0f, 0.0f, 1.0f };
 GLfloat lAmb[4] = { 0.05f, 0.05f, 0.05f, 1.0f };
-GLfloat lDif[4] = { 0.55f, 0.55f, 0.0f, 1.0f };
-GLfloat lSpe[4] = { 0.55f, 0.55f, 0.0f, 1.0f };
-GLfloat emission[] = { 0.55f, 0.55f, 0.0f, 1.0f };
+GLfloat lDif[4] = { 0.9f, 0.9f, 0.9f, 1.0f };
+GLfloat lSpe[4] = { 0.9f, 0.9f, 0.9f, 1.0f };
+GLfloat emission[] = { 0.9f, 0.9f, 0.9f, 1.0f };
 //没有mtl文件使用的材质
 GLfloat ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -113,8 +113,49 @@ bool smoke_dead(Particle* p)
 	return false;
 }
 
+void drawTop()
+{
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+	//glEnable(GL_TEXTURE_2D);
+	//glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
+	int i = 0, j = 0;
+
+	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+	const GLfloat x0[] = { 0,x,2 * x,3 * x,4 * x };
+	const GLfloat x1 = -0.5f, x2 = 0.5f;
+	const GLfloat y1 = -0.5f, y2 = 0.5f;
+	const GLfloat point[12][2] = {
+		{ x2,y1 },{ 0,0 },{ x1,y1 },
+		{ x1,y1 },{ 0,0 },{ x1,y2 },
+		{ x1,y2 },{ 0,0 },{ x2,y2 },
+		{ x2,y2 },{ 0,0 },{ x2,y1 },
+	};
+	const GLfloat dir[12][2] = { { x0[0],1 - y },{ x0[2],1 },{ x0[1],1 - y },
+	{ x0[1],1 - y },{ x0[2],1 },{ x0[2],1 - y },
+	{ x0[2],1 - y },{ x0[2],1 },{ x0[3],1 - y },
+	{ x0[3],1 - y },{ x0[2],1 },{ x0[4],1 - y } };
+	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+	glBegin(GL_TRIANGLES);
+
+	for (int k = 0; k < 12; k++) {
+		//glTexCoord2fv(dir[k]);
+		glVertex2fv(point[k]);
+	}
+	glEnd();
+
+
+	//glDisable(GL_TEXTURE_2D);
+}
+
 void drawBottom(GLuint texture)
 {
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
 	int i = 0, j = 0;
@@ -149,8 +190,8 @@ void drawBottom(GLuint texture)
 void drawLine() {
 	glPushMatrix();
 	glBegin(GL_LINES);
-	glVertex3f(0.0f, -15.0f, 0.0f);
-	glVertex3f(0.0f, 15.0f, 0.0f);
+	glVertex3f(0.0f, -1.0f*skySizeY/2, 0.0f);
+	glVertex3f(0.0f, 1.0f*skySizeY / 2, 0.0f);
 	glEnd();
 	glBegin(GL_LINES);
 	glVertex3f(-100.0f, 0.0f, 0.0f);
@@ -160,10 +201,7 @@ void drawLine() {
 	glVertex3f(0.0f, 0.0f, -100.0f);
 	glVertex3f(0.0f, 0.0f, 100.0f);
 	glEnd();
-	glBegin(GL_LINES);
-	glVertex3f(lpos[0], lpos[1], lpos[2]);
-	glVertex3f(ldirect[0] * 10.0f, ldirect[1] * 10.0f, ldirect[2] * 10.0f);
-	glEnd();
+	
 	glPopMatrix();
 }
 
@@ -216,6 +254,27 @@ void drawRect(GLuint texture, int i, int j)
 	glDisable(GL_TEXTURE_2D);
 }
 
+void drawRect( int i, int j)
+{
+	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+
+	const GLfloat x1 = -0.5, x2 = 0.5;
+	const GLfloat y1 = -0.5, y2 = 0.5;
+	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+	const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };
+	const GLfloat dir[4][2] = { { j*x,1 - (i + 1)*y },{ (j + 1)*x,1 - (i + 1)*y },{ (j + 1)*x ,1 - i*y },{ j*x,1 - i*y } };
+	glBegin(GL_QUADS);
+
+	for (int k = 0; k < 4; k++) {
+		glVertex2fv(point[k]);
+	}
+	glEnd();
+
+}
+
 int a = 0;
 
 void renderScene() {
@@ -226,17 +285,17 @@ void renderScene() {
 	gluLookAt(eye[0], eye[1], eye[2], center[0], center[1], center[2], 0, 1, 0);
 	glEnable(GL_LIGHTING);
 	//Set up light
-	glLightfv(GL_LIGHT0, GL_POSITION, lpos);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lAmb);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, lDif);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, lSpe);
-	glLightfv(GL_LIGHT0, GL_SPOT_DIRECTION, ldirect);
-	glLightf(GL_LIGHT0, GL_SPOT_CUTOFF, lcutoff);
-	glLightf(GL_LIGHT0, GL_SPOT_EXPONENT, lexponent);
-	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, light_constant);
-	glLightf(GL_LIGHT0, GL_LINEAR_ATTENUATION, light_linear);
-	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, light_quadratic);
-	glEnable(GL_LIGHT0);
+	glLightfv(GL_LIGHT1, GL_POSITION, lpos);
+	glLightfv(GL_LIGHT1, GL_AMBIENT, lAmb);
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, lDif);
+	glLightfv(GL_LIGHT1, GL_SPECULAR, lSpe);
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, ldirect);
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, lcutoff);
+	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, lexponent);
+	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, light_constant);
+	glLightf(GL_LIGHT1, GL_LINEAR_ATTENUATION, light_linear);
+	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, light_quadratic);
+	glEnable(GL_LIGHT1);
 
 	glPushMatrix();
 
@@ -274,7 +333,7 @@ void renderScene() {
 
 	glLoadName(1);//加载名字  
 	glPushMatrix();
-	glTranslatef(-17.0f, -9.0f, -23.5f);
+	glTranslatef(-17.0f, -1.0f*skySizeY / 2.0f+6.0f, -24.0f);
 	glRotatef(180, 1, 0, 0);
 	glRotatef(180, 0, 0, 1);
 	glRotatef(ratio, 0, 1, 0);
@@ -291,7 +350,7 @@ void renderScene() {
 	//窗
 	glLoadName(2);//加载名字  
 	glPushMatrix();
-	glTranslatef(-30.0f, -6.0f, -23.5f);
+	glTranslatef(-30.0f, -1.0f*skySizeY / 2.0f+8.5f, -23.5f);
 	glRotatef(180, 1, 0, 0);
 	glRotatef(180, 0, 0, 1);
 	glRotatef(ratio, 0, 1, 0);
@@ -315,14 +374,12 @@ void renderScene() {
 
 
 	//天花板
-	/*
 	glPushMatrix();
 	glTranslatef(0.0f, 1.0f*skySizeY / 2.0f, 0.0f);
 	glRotatef(270, 1, 0, 0);
 	glScalef(skySizeX, skySizeZ, 1);
-	drawTop(texture[1]);
+	drawTop();
 	glPopMatrix();
-	*/
 
 	/*
 	//墙壁（前）
@@ -479,10 +536,11 @@ GLint GenTableList()
 void setupRC() {
 	srand(unsigned(time(NULL)));
 	glClearColor(1.0, 0.0, 0.0, 0.0);
+
 	//平滑过渡效果
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
-	//glColor4f(1.0, 1.0, 1.0, 1.0f);
+	glColor4f(1.0, 1.0, 1.0, 1.0f);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
 	glEnable(GL_COLOR_MATERIAL);
@@ -508,7 +566,7 @@ void setupRC() {
 
 	//s = new snow(texture[0]);
 
-	snowflower_emitter = new Emitter(7000, -1.0f*skySizeX / 2.0f, 1.0f*skySizeX / 2.0f, 1.0f*skySizeY / 2.0f, 1.0f*skySizeY / 2.0f, -1.0f*skySizeZ / 2.0f, 1.0f*skySizeZ / 2.0f);
+	snowflower_emitter = new Emitter(10000, -1.0f*skySizeX / 2.0f, 1.0f*skySizeX / 2.0f, 1.0f*skySizeY / 2.0f, 1.0f*skySizeY / 2.0f, -1.0f*skySizeZ / 2.0f, 1.0f*skySizeZ / 2.0f);
 	snowflower_emitter->emit(init_snowflower_partical, snowflower_dead);
 	smoke_emitter = new Emitter(2000, -31.0f, -28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeZ / 2.0f + 67.5f, -1.0f*skySizeZ / 2.0f + 69.5f);
 	smoke_emitter->emit(init_smoke_partical, smoke_dead);
