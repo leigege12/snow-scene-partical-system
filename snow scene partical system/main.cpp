@@ -12,7 +12,7 @@
 
 GLint windowHandler;
 const int skySizeX = 200;
-const int skySizeY = 60;
+const int skySizeY = 100;
 const int skySizeZ = 200;
 //光源
 GLfloat light_constant = 0.01f;
@@ -21,12 +21,13 @@ GLfloat light_quadratic = 0.0001f;
 GLfloat ldirect[3] = { 0.0f,-0.2f,-1.0f };
 GLfloat lcutoff =22.5f;
 GLfloat lexponent = 5.0f;
-GLfloat lpos[4] = { 0.0f, -15.0f, 0.0f, 1.0f };
+GLfloat lpos[4] = { 0.0f, -1.0f*skySizeY / 2 + 20.0f, 0.0f , 1.0f };
 GLfloat lAmb[4] = { 0.05f, 0.05f, 0.05f, 1.0f };
-GLfloat lDif[4] = { 0.9f, 0.9f, 0.9f, 1.0f };
-GLfloat lSpe[4] = { 0.9f, 0.9f, 0.9f, 1.0f };
-GLfloat emission[] = { 0.9f, 0.9f, 0.9f, 1.0f };
+GLfloat lDif[4] = { 1.0f, 1.0f, 0.0f, 1.0f };
+GLfloat lSpe[4] = { 0.9f, 0.9f, 0.0f, 1.0f };
+GLfloat emission[] = { 0.9f, 0.9f, 0.0f, 1.0f };
 //没有mtl文件使用的材质
+GLfloat temp[] = { 0.0f, 0.0f, 0.0f, 0.0f };
 GLfloat ambient[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 GLfloat diffuse[] = { 1.0f, 1.0f, 1.0f, 1.0f };
 GLfloat specular[] = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -45,15 +46,15 @@ int wWidth = 0;
 
 
 //视点      
-float center[] = { 0, 0, 0 };
-float eye[] = { 0, 0, 50 };
+float center[] = { 0, -1.0f*skySizeY / 2 + 20.0f, 0 };
+float eye[] = { 0, -1.0f*skySizeY/2+20.0f, 50 };
 GLfloat dx = 0, dy = 0, dz = 0;
 GLfloat ax = 0, ay = 0, az = 0;
 GLint mx = 0, my = 0;
 GLint MouseDown = 0;
 float ratio = 180;
 
-int col = 4, num = 12;
+//int col = 4, num = 12;
 
 
 Emitter *snowflower_emitter;
@@ -113,79 +114,83 @@ bool smoke_dead(Particle* p)
 	return false;
 }
 
-void drawTop()
+
+/*
+void drawTop(GLuint texture)
 {
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
-	//glEnable(GL_TEXTURE_2D);
-	//glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
-	int i = 0, j = 0;
+//glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+//glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+//glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+//glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+//glEnable(GL_TEXTURE_2D);
+glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]
+int i = 0, j = 0;
 
-	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
-	const GLfloat x0[] = { 0,x,2 * x,3 * x,4 * x };
-	const GLfloat x1 = -0.5f, x2 = 0.5f;
-	const GLfloat y1 = -0.5f, y2 = 0.5f;
-	const GLfloat point[12][2] = {
-		{ x2,y1 },{ 0,0 },{ x1,y1 },
-		{ x1,y1 },{ 0,0 },{ x1,y2 },
-		{ x1,y2 },{ 0,0 },{ x2,y2 },
-		{ x2,y2 },{ 0,0 },{ x2,y1 },
-	};
-	const GLfloat dir[12][2] = { { x0[0],1 - y },{ x0[2],1 },{ x0[1],1 - y },
-	{ x0[1],1 - y },{ x0[2],1 },{ x0[2],1 - y },
-	{ x0[2],1 - y },{ x0[2],1 },{ x0[3],1 - y },
-	{ x0[3],1 - y },{ x0[2],1 },{ x0[4],1 - y } };
-	glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-	glBegin(GL_TRIANGLES);
+const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+const GLfloat x0[] = { 0,x,2 * x,3 * x,4 * x };
+const GLfloat x1 = -0.5f, x2 = 0.5f;
+const GLfloat y1 = -0.5f, y2 = 0.5f;
+const GLfloat point[12][2] = {
+{ x2,y1 },{ 0,0 },{ x1,y1 },
+{ x1,y1 },{ 0,0 },{ x1,y2 },
+{ x1,y2 },{ 0,0 },{ x2,y2 },
+{ x2,y2 },{ 0,0 },{ x2,y1 },
+};
+const GLfloat dir[12][2] = { { x0[0],1 - y },{ x0[2],1 },{ x0[1],1 - y },
+{ x0[1],1 - y },{ x0[2],1 },{ x0[2],1 - y },
+{ x0[2],1 - y },{ x0[2],1 },{ x0[3],1 - y },
+{ x0[3],1 - y },{ x0[2],1 },{ x0[4],1 - y } };
 
-	for (int k = 0; k < 12; k++) {
-		//glTexCoord2fv(dir[k]);
-		glVertex2fv(point[k]);
-	}
-	glEnd();
+glBegin(GL_TRIANGLES);
+
+for (int k = 0; k < 12; k++) {
+glTexCoord2fv(dir[k]);
+glVertex2fv(point[k]);
+}
+glEnd();
 
 
-	//glDisable(GL_TEXTURE_2D);
+glDisable(GL_TEXTURE_2D);
 }
 
 void drawBottom(GLuint texture)
 {
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
-	int i = 0, j = 0;
+//glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+//glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+//glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+//glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+//glEnable(GL_TEXTURE_2D);
+glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]
+int i = 0, j = 0;
 
-	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
-	const GLfloat x0[] = { 0,x,2 * x,3 * x,4 * x };
-	const GLfloat x1 = -0.5f, x2 = 0.5f;
-	const GLfloat y1 = -0.5f, y2 = 0.5f;
-	const GLfloat point[12][2] = {
-		{ x2,y1 },{ 0,0 },{ x1,y1 },
-		{ x1,y1 },{ 0,0 },{ x1,y2 },
-		{ x1,y2 },{ 0,0 },{ x2,y2 },
-		{ x2,y2 },{ 0,0 },{ x2,y1 },
-	};
-	const GLfloat dir[12][2] = { { x0[0],y },{ x0[2],0 },{ x0[1],y },
-	{ x0[1],y },{ x0[2],0 },{ x0[2],y },
-	{ x0[2],y },{ x0[2],0 },{ x0[3],y },
-	{ x0[3],y },{ x0[2],0 },{ x0[4],y } };
+const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+const GLfloat x0[] = { 0,x,2 * x,3 * x,4 * x };
+const GLfloat x1 = -0.5f, x2 = 0.5f;
+const GLfloat y1 = -0.5f, y2 = 0.5f;
+const GLfloat point[12][2] = {
+{ x2,y1 },{ 0,0 },{ x1,y1 },
+{ x1,y1 },{ 0,0 },{ x1,y2 },
+{ x1,y2 },{ 0,0 },{ x2,y2 },
+{ x2,y2 },{ 0,0 },{ x2,y1 },
+};
+const GLfloat dir[12][2] = { { x0[0],y },{ x0[2],0 },{ x0[1],y },
+{ x0[1],y },{ x0[2],0 },{ x0[2],y },
+{ x0[2],y },{ x0[2],0 },{ x0[3],y },
+{ x0[3],y },{ x0[2],0 },{ x0[4],y } };
 
-	glBegin(GL_TRIANGLES);
+glBegin(GL_TRIANGLES);
 
-	for (int k = 0; k < 12; k++) {
-		glTexCoord2fv(dir[k]);
-		glVertex2fv(point[k]);
-	}
-	glEnd();
-
-
-	glDisable(GL_TEXTURE_2D);
+for (int k = 0; k < 12; k++) {
+glTexCoord2fv(dir[k]);
+glVertex2fv(point[k]);
 }
+glEnd();
+
+
+glDisable(GL_TEXTURE_2D);
+}
+
+*/
 
 void drawLine() {
 	glPushMatrix();
@@ -207,9 +212,16 @@ void drawLine() {
 
 void drawRect(GLuint texture)
 {
+	/*
 	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+	*/
+	glMaterialfv(GL_FRONT, GL_AMBIENT, temp);
+	glMaterialfv(GL_FRONT, GL_DIFFUSE, temp);
+	glMaterialfv(GL_FRONT, GL_SPECULAR, temp);
+	glMaterialfv(GL_FRONT, GL_EMISSION, temp);
 	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 	glEnable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
@@ -223,57 +235,66 @@ void drawRect(GLuint texture)
 		glTexCoord2iv(dir[i]);
 		glVertex2fv(point[i]);
 	}
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glEnd();
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glDisable(GL_TEXTURE_2D);
 }
 
 
-
+/*
 void drawRect(GLuint texture, int i, int j)
 {
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
-	glEnable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]       
+glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+glEnable(GL_TEXTURE_2D);
+glBindTexture(GL_TEXTURE_2D, texture);  //选择纹理texture[status]
 
-	const GLfloat x1 = -0.5, x2 = 0.5;
-	const GLfloat y1 = -0.5, y2 = 0.5;
-	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
-	const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };
-	const GLfloat dir[4][2] = { { j*x,1 - (i + 1)*y },{ (j + 1)*x,1 - (i + 1)*y },{ (j + 1)*x ,1 - i*y },{ j*x,1 - i*y } };
-	glBegin(GL_QUADS);
+const GLfloat x1 = -0.5, x2 = 0.5;
+const GLfloat y1 = -0.5, y2 = 0.5;
+const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };
+//const GLfloat dir[4][2] = { { j*x,1 - (i + 1)*y },{ (j + 1)*x,1 - (i + 1)*y },{ (j + 1)*x ,1 - i*y },{ j*x,1 - i*y } };
+const GLfloat dir[4][2] = { { 0,0 },{ 1,0 },{ 1,1 },{ 0,1 } };
 
-	for (int k = 0; k < 4; k++) {
-		glTexCoord2fv(dir[k]);
-		glVertex2fv(point[k]);
-	}
-	glEnd();
+glBegin(GL_QUADS);
 
-	glDisable(GL_TEXTURE_2D);
+for (int k = 0; k < 4; k++) {
+glTexCoord2fv(dir[k]);
+glVertex2fv(point[k]);
+}
+glEnd();
+
+glDisable(GL_TEXTURE_2D);
 }
 
+*/
+/*
 void drawRect( int i, int j)
 {
-	glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
-	glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
-	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
-	glMaterialf(GL_FRONT, GL_SHININESS, shininess);
+glMaterialfv(GL_FRONT, GL_AMBIENT, ambient);
+glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuse);
+glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
+glMaterialf(GL_FRONT, GL_SHININESS, shininess);
 
-	const GLfloat x1 = -0.5, x2 = 0.5;
-	const GLfloat y1 = -0.5, y2 = 0.5;
-	const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
-	const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };
-	const GLfloat dir[4][2] = { { j*x,1 - (i + 1)*y },{ (j + 1)*x,1 - (i + 1)*y },{ (j + 1)*x ,1 - i*y },{ j*x,1 - i*y } };
-	glBegin(GL_QUADS);
+const GLfloat x1 = -0.5, x2 = 0.5;
+const GLfloat y1 = -0.5, y2 = 0.5;
+const GLfloat x = 1.0 / col, y = 1.0 / (num / col);
+const GLfloat point[4][2] = { { x1,y1 },{ x2,y1 },{ x2,y2 },{ x1,y2 } };
+const GLfloat dir[4][2] = { { j*x,1 - (i + 1)*y },{ (j + 1)*x,1 - (i + 1)*y },{ (j + 1)*x ,1 - i*y },{ j*x,1 - i*y } };
+glBegin(GL_QUADS);
 
-	for (int k = 0; k < 4; k++) {
-		glVertex2fv(point[k]);
-	}
-	glEnd();
+for (int k = 0; k < 4; k++) {
+glVertex2fv(point[k]);
+}
+glEnd();
 
 }
+
+*/
 
 int a = 0;
 
@@ -333,7 +354,7 @@ void renderScene() {
 
 	glLoadName(1);//加载名字  
 	glPushMatrix();
-	glTranslatef(-17.0f, -1.0f*skySizeY / 2.0f+6.0f, -24.0f);
+	glTranslatef(-17.0f, -1.0f*skySizeY / 2.0f+6.0f, -1.0f*skySizeZ / 2.0f + 76.5f);
 	glRotatef(180, 1, 0, 0);
 	glRotatef(180, 0, 0, 1);
 	glRotatef(ratio, 0, 1, 0);
@@ -350,7 +371,7 @@ void renderScene() {
 	//窗
 	glLoadName(2);//加载名字  
 	glPushMatrix();
-	glTranslatef(-30.0f, -1.0f*skySizeY / 2.0f+8.5f, -23.5f);
+	glTranslatef(-30.0f, -1.0f*skySizeY / 2.0f+8.5f, -1.0f*skySizeZ / 2.0f + 76.5f);
 	glRotatef(180, 1, 0, 0);
 	glRotatef(180, 0, 0, 1);
 	glRotatef(ratio, 0, 1, 0);
@@ -368,7 +389,8 @@ void renderScene() {
 	glTranslatef(0.0f, -1.0f*skySizeY / 2.0f, 0.0f);
 	glRotatef(270, 1, 0, 0);
 	glScalef(skySizeX, skySizeZ, 1);
-	drawBottom(texture[4]);
+	//drawBottom(texture[4]);
+	drawRect(texture[4]);
 	glPopMatrix();
 
 
@@ -378,10 +400,11 @@ void renderScene() {
 	glTranslatef(0.0f, 1.0f*skySizeY / 2.0f, 0.0f);
 	glRotatef(270, 1, 0, 0);
 	glScalef(skySizeX, skySizeZ, 1);
-	drawTop();
+	//drawTop(texture[5]);
+	drawRect(texture[5]);
 	glPopMatrix();
 
-	/*
+	
 	//墙壁（前）
 	glPushMatrix();
 	glTranslatef(0.0f, 0.0f, -1.0f*skySizeZ / 2.0);
@@ -389,15 +412,15 @@ void renderScene() {
 	glRotatef(180, 0, 0, 1);
 	glRotatef(180, 0, 1, 0);
 	glScalef(skySizeX, skySizeY, 1);
-	drawRect(texture[0], 1, 2);
+	drawRect(texture[6]);
 	glPopMatrix();
-	/*
+	
 	//墙壁（后）
 	glPushMatrix();
 	glTranslatef(0.0f, 0.0f, 1.0f*skySizeZ / 2.0f);
 	glRotatef(180, 0, 1, 0);
 	glScalef(skySizeX, skySizeY, 1);
-	drawRect(texture[1], 1, 0);
+	drawRect(texture[7]);
 	glPopMatrix();
 
 	//墙壁（左）
@@ -405,7 +428,7 @@ void renderScene() {
 	glTranslatef(-1.0f*skySizeX / 2.0f, 0.0f, 0.0f);
 	glRotatef(90, 0, 1, 0);
 	glScalef(skySizeZ, skySizeY, 1);
-	drawRect(texture[1], 1, 1);
+	drawRect(texture[8]);
 	glPopMatrix();
 
 	//墙壁（右）
@@ -413,9 +436,9 @@ void renderScene() {
 	glTranslatef(1.0f*skySizeX / 2.0f, 0.0f, 0.0f);
 	glRotatef(270, 0, 1, 0);
 	glScalef(skySizeZ, skySizeY, 1);
-	drawRect(texture[1], 1, 3);
+	drawRect(texture[9]);
 	glPopMatrix();
-	*/
+	
 
 	glEnable(GL_BLEND);
 	glPushMatrix();
@@ -496,11 +519,11 @@ void myKeyboard(unsigned char key, int x, int y) {
 		break;
 	}
 	case 'i': {//视角上移  
-		center[1] += 0.5f;
+		center[1] += 2.0f;
 		break;
 	}
 	case 'k': {//视角上移  
-		center[1] -= 0.5f;
+		center[1] -= 2.0f;
 		break;
 	}
 	}
@@ -551,24 +574,39 @@ void setupRC() {
 	readObj(house, "obj\\base.obj", basemap, basename, base_matname);
 	houseList = GenTableList();
 	baseList = houseList + 1;
+
+	texture[0] = readTexture("door.bmp");
+	texture[1] = readTexture("window.bmp");
+	texture[2] = readTexture("snowflower.bmp");
+	texture[3] = readTexture("flame.bmp");
+	texture[4] = readTexture("roof.bmp");
+	texture[5] = readTexture("up.bmp");
+	texture[6] = readTexture("front.bmp");
+	texture[7] = readTexture("back.bmp");
+	texture[8] = readTexture("left.bmp");
+	texture[9] = readTexture("right.bmp");
+
+	/*
 	buildTexture("door.jpg", texture[0]);
 	buildTexture("window.jpg", texture[1]);
 	buildTexture("snowflower.jpg", texture[2]);
 	buildTexture("flame.bmp", texture[3]);
 	buildTexture("roof.bmp", texture[4]);
-	//BuildTexture("background.jpg", texture[1]);
-	//BuildTexture("spark.bmp", texture[2]);
-	//BuildTexture("packet.jpg", texture[3]);
-	//BuildTexture("door.jpg", texture[4]);
-	//BuildTexture("Butterfly1.bmp", texture[5]);
+	buildTexture("up.bmp", texture[5]);
+	buildTexture("front.bmp", texture[6]);
+	buildTexture("back.bmp", texture[7]);
+	buildTexture("left.bmp", texture[8]);
+	buildTexture("right.bmp", texture[9]);
+	*/
+	
 	//BuildTexture("Butterfly2.bmp", texture[6]);
 	//BuildTexture("Butterfly3.bmp", texture[7]);
 
 	//s = new snow(texture[0]);
 
-	snowflower_emitter = new Emitter(10000, -1.0f*skySizeX / 2.0f, 1.0f*skySizeX / 2.0f, 1.0f*skySizeY / 2.0f, 1.0f*skySizeY / 2.0f, -1.0f*skySizeZ / 2.0f, 1.0f*skySizeZ / 2.0f);
+	snowflower_emitter = new Emitter(15000, -1.0f*skySizeX / 2.0f, 1.0f*skySizeX / 2.0f, 1.0f*skySizeY / 2.0f, 1.0f*skySizeY / 2.0f, -1.0f*skySizeZ / 2.0f, 1.0f*skySizeZ / 2.0f);
 	snowflower_emitter->emit(init_snowflower_partical, snowflower_dead);
-	smoke_emitter = new Emitter(2000, -31.0f, -28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeZ / 2.0f + 67.5f, -1.0f*skySizeZ / 2.0f + 69.5f);
+	smoke_emitter = new Emitter(2500, -31.0f, -28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeY / 2.0f + 28.0f, -1.0f*skySizeZ / 2.0f + 67.5f, -1.0f*skySizeZ / 2.0f + 69.5f);
 	smoke_emitter->emit(init_smoke_partical, smoke_dead);
 	//e2 = new emitter(400, 1.5f, 2.5f, -8.0f, -7.5f, -19.5f, -20.5f);
 	//e2->emit(init_flame);

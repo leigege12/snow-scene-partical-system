@@ -115,13 +115,11 @@
     <ClCompile Include="move.cpp" />
     <ClCompile Include="obj_mat.cpp" />
     <ClCompile Include="partical_emitter.cpp" />
-    <ClCompile Include="texture.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="move.h" />
     <ClInclude Include="obj_mat.h" />
     <ClInclude Include="partical_emitter.h" />
-    <ClInclude Include="texture.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

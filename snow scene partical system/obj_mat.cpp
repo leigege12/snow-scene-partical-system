@@ -1,6 +1,5 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include"obj_mat.h"
-#include<gl/glut.h>
 #include <windows.h>
 #include <iostream>
 #include <string>
@@ -17,7 +16,7 @@ int power_of_two(int n)
 
 void setMaterial(Material &mat)
 {
-	//std::cout << mat.ambient << std::endl;;
+
 	glMaterialfv(GL_FRONT, GL_AMBIENT, mat.ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, mat.diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, mat.specular);
@@ -25,16 +24,14 @@ void setMaterial(Material &mat)
 	glMaterialf(GL_FRONT, GL_SHININESS, 10);
 }
 
-static GLuint load_texture(const char *file_name);
-static void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat);
-static GLuint load_texture(const char *file_name)
+
+ GLuint readTexture(const char *file_name)
 {
 	int width, height;
 	int total_bytes;
 	GLuint last_texture_ID, texture_ID = 0;
 	GLubyte *pixels = NULL;
 	FILE *pFile;
-	printf("%s\n", file_name);
 	if ((pFile = fopen(file_name, "rb")) == NULL)
 	{
 		cout << "Read texture error" << endl;
@@ -107,7 +104,8 @@ static GLuint load_texture(const char *file_name)
 
 	free(pixels);
 	fclose(pFile);
-	cout << texture_ID;
+	cout  << texture_ID <<" "<<file_name<<endl;
+	//printf("%s\n", file_name);
 	return texture_ID;
 }
 
@@ -301,12 +299,13 @@ void loadObj(set<string>& objname, map<string, Object> &objmap, map<string, Mate
 		glEnd();
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glDisable(GL_TEXTURE_2D);
 	}
 }
 
 
 
-static void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat)
+void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat)
 {
 
 	ifstream in;
@@ -367,7 +366,7 @@ static void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat)
 		else if (word == "map_Kd" || word == "map_Ka")
 		{
 			is >> fname;
-			map = load_texture((cd + "\\" + fname).c_str());
+			map = readTexture((cd + "\\" + fname).c_str());
 			hasmap = true;
 		}
 	}

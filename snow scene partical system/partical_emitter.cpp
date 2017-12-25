@@ -108,7 +108,7 @@ void Particle::update()
 		speed.y += acc.y;
 		speed.x += acc.x;
 		speed.z += acc.z;
-		life -= 0.2f;
+		life -= 0.1f;
 }
 
 

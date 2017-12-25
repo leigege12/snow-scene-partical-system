@@ -8,6 +8,8 @@
 #include <cstdio>
 #include<map>
 #include<set>
+#include<gl/glut.h>
+
 
 using namespace std;
 
@@ -98,6 +100,9 @@ inline bool startswith(string &a, string &b)
 	return a.substr(0, b.size()) == b;
 }
 
+GLuint readTexture(const char *file_name);
+void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat);
 void readObj(string &cd, string file, map<string, Object> &m, set<string> &n, map<string, Material> &matname);
 void loadObj(set<string>& objname, map<string, Object> &objmap, map<string, Material> &matname);
+
 
