@@ -105,7 +105,6 @@ void setMaterial(Material &mat)
 	free(pixels);
 	fclose(pFile);
 	cout  << texture_ID <<" "<<file_name<<endl;
-	//printf("%s\n", file_name);
 	return texture_ID;
 }
 
@@ -335,7 +334,6 @@ void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat)
 			{
 				if (hasmap)
 				{
-					printf("hasMap\n");
 					mat.insert(make_pair(ptname, Material(ambient, diffuse, specular, emission, map)));
 				}
 				else
@@ -358,7 +356,6 @@ void ReadMtl(string &cd, string mtlfile, map<string, Material> &mat)
 		{
 			is >> specular[0] >> specular[1] >> specular[2];
 		}
-		//else if (word == "Tf")
 		else if (word == "Ke")
 		{
 			is >> emission[0] >> emission[1] >> emission[2];

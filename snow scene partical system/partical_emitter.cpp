@@ -4,7 +4,7 @@
 
 Particle::Particle() {}
 
-Particle::Particle(vec _size, vec _speed, vec _acc, vec _angle,
+Particle::Particle(vec3 _size, vec3 _speed, vec3 _acc, vec3 _angle,
 	float _life, unsigned int _texture)
 {
 	size = _size;
@@ -16,16 +16,10 @@ Particle::Particle(vec _size, vec _speed, vec _acc, vec _angle,
 	has_tex = true;
 }
 
-Particle::Particle(vec _size, vec _speed, vec _acc, vec _angle,
-	float _life, vec _color)
+
+const vec3& Particle::getPlace()
 {
-	size = _size;
-	speed = _speed;
-	acc = _acc;
-	life = _life;
-	color = _color;
-	angle = _angle;
-	has_tex = false;
+	return place;
 }
 
 
@@ -112,20 +106,12 @@ void Particle::update()
 }
 
 
-const vec& Particle::getPlace()
-{
-	return place;
+void Particle::setTexture(GLuint texture) {
+	this->texture = texture;
 }
 
-const vec& Particle::getSize()
-{
-	return size;
-}
 
-const vec& Particle::getAngle()
-{
-	return angle;
-}
+
 
 
 Emitter::Emitter(int _speed, float _x1,
@@ -138,12 +124,19 @@ Emitter::Emitter(int _speed, float _x1,
 	z1 = _z1;
 	z2 = _z2;
 	p = new Particle*[speed];
-	dead = new bool[speed];
-	for (int i = 0; i < speed; i++) {
-		dead[i] = false;
-	}
-	//num = speed;
 }
+
+
+void Emitter::changeLoc(float _x1, float _x2, float _y1, float _y2, float _z1, float _z2) {
+	x1 = _x1;
+	x2 = _x2;
+	y1 = _y1;
+	y2 = _y2;
+	z1 = _z1;
+	z2 = _z2;
+}
+
+
 
 //设置粒子死亡函数，无限个数发射
 void Emitter::emit(Particle* (init)(), bool(*deadF)(Particle*)) {
@@ -181,16 +174,19 @@ void Emitter::emit(Particle* (init)())
 void Emitter::update()
 {
 	for (int i = 0; i < speed; i++) {
-		if (!dead[i]) {
+		if (p[i] && !(p[i]->life < 0) && !deadFunc(p[i])) {
 			p[i]->update();
 			//p[i]->show();
 		}
+		else
+			p[i] = NULL;
 	}
 }
 //遍历粒子,显示粒子
 void Emitter::show()
 {
 	for (int i = 0; i < speed; i++) {
+		if(p[i]!=NULL)
 			p[i]->show();
 	}
 }
@@ -212,23 +208,7 @@ void Emitter::infinite_update() {
 	}
 }
 
-//所有粒子都初始化
-void Emitter::reset()
-{
-	for (int i = 0; i < speed; i++) {
-		dead[i] = false;
-	}
-	for (int i = 0; i < speed; i++) {
-		p[i] = initFunc();
-		int place_x = rand() % speed;
-		int place_y = rand() % speed;
-		int place_z = rand() % speed;
-		p[i]->place.x = 1.0f*place_x / speed*(x2 - x1) + x1;
-		p[i]->place.y = 1.0f*place_y / speed*(y2 - y1) + y1;
-		p[i]->place.z = 1.0f*place_z / speed*(z2 - z1) + z1;
-	}
-	//num = speed;
-}
+
 
 
 
